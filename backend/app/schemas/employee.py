@@ -35,11 +35,24 @@ class EmployeeUpdate(BaseModel):
     status: str | None = None
     base_salary: float | None = None
     currency: str | None = None
+    changed_by: str | None = None
 
 
-class EmployeeRead(EmployeeBase):
+class EmployeeResponse(EmployeeBase):
     id: int
     created_at: datetime
     updated_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class SalaryHistoryResponse(BaseModel):
+    id: int
+    employee_id: int
+    changed_by: str
+    previous_salary: float
+    new_salary: float
+    reason: str
+    changed_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
