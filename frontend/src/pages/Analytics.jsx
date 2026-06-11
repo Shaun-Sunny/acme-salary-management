@@ -1,11 +1,25 @@
 import { useQuery } from '@tanstack/react-query'
-import { BarChart3, LoaderCircle, TrendingUp, Trophy, Users } from 'lucide-react'
+import { LoaderCircle } from 'lucide-react'
+import {
+  Bar,
+  BarChart,
+  Cell,
+  Legend,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts'
 import {
   getBandDistribution,
   getHeadcount,
   getSalaryStats,
   getTopEarners,
 } from '../api/analytics.js'
+
+const PIE_COLORS = ['#4f46e5', '#7c3aed', '#a855f7', '#c084fc', '#e879f9']
 
 function Spinner() {
   return (
@@ -16,23 +30,29 @@ function Spinner() {
   )
 }
 
-function formatMoney(value) {
+function formatNumber(value) {
   return Number(value).toLocaleString(undefined, {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
   })
 }
 
-function MetricCard({ icon: Icon, label, value, accent }) {
+function formatCurrency(value) {
+  return `$${formatNumber(value)}`
+}
+
+function formatSalary(value, currency) {
+  return `${Number(value).toLocaleString(undefined, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })} ${currency}`
+}
+
+function StatCard({ label, value }) {
   return (
-    <article className={`metric-card ${accent}`}>
-      <div className="metric-icon">
-        <Icon size={18} />
-      </div>
-      <div>
-        <p className="metric-label">{label}</p>
-        <h2 className="metric-value">{value}</h2>
-      </div>
+    <article className="analytics-stat-card">
+      <p>{label}</p>
+      <strong>{value}</strong>
     </article>
   )
 }
@@ -48,7 +68,7 @@ export default function Analytics() {
     queryFn: getHeadcount,
   })
 
-  const bandQuery = useQuery({
+  const bandDistributionQuery = useQuery({
     queryKey: ['analytics', 'band-distribution'],
     queryFn: getBandDistribution,
   })
@@ -58,130 +78,162 @@ export default function Analytics() {
     queryFn: () => getTopEarners(10),
   })
 
-  const isPending =
-    salaryStatsQuery.isPending ||
-    headcountQuery.isPending ||
-    bandQuery.isPending ||
-    topEarnersQuery.isPending
+  const isLoading =
+    salaryStatsQuery.isLoading ||
+    headcountQuery.isLoading ||
+    bandDistributionQuery.isLoading ||
+    topEarnersQuery.isLoading
 
   const isError =
     salaryStatsQuery.isError ||
     headcountQuery.isError ||
-    bandQuery.isError ||
+    bandDistributionQuery.isError ||
     topEarnersQuery.isError
 
+  const overall = salaryStatsQuery.data?.overall ?? {}
+  const salaryByDepartment = salaryStatsQuery.data?.by_department ?? []
+  const headcountByCountry = headcountQuery.data?.by_country ?? []
+  const bandDistribution = bandDistributionQuery.data ?? []
+  const topEarners = topEarnersQuery.data ?? []
+
   return (
-    <section className="page-shell">
+    <section className="page-shell analytics-page">
       <div className="page-header analytics-header">
         <div>
           <p className="eyebrow">Analytics dashboard</p>
           <h1>Salary and headcount insights</h1>
           <p className="page-subtitle">
-            Quick answers for compensation, workforce distribution, and top earners.
+            Track compensation trends, workforce distribution, and top earners across ACME.
           </p>
         </div>
       </div>
 
-      {isPending ? (
+      {isLoading ? (
         <div className="panel analytics-panel">
           <Spinner />
         </div>
       ) : isError ? (
-        <div className="error-box">Unable to load analytics right now.</div>
+        <div className="error-box">Unable to load analytics. Please try again.</div>
       ) : (
-        <div className="analytics-grid">
-          <section className="analytics-stack">
-            <div className="metric-grid">
-              <MetricCard icon={Users} label="Active headcount" value={headcountQuery.data.total} accent="teal" />
-              <MetricCard
-                icon={TrendingUp}
-                label="Average salary"
-                value={formatMoney(salaryStatsQuery.data.overall.avg)}
-                accent="amber"
-              />
-              <MetricCard
-                icon={BarChart3}
-                label="Median salary"
-                value={formatMoney(salaryStatsQuery.data.overall.median)}
-                accent="slate"
-              />
-              <MetricCard
-                icon={Trophy}
-                label="Highest salary"
-                value={formatMoney(salaryStatsQuery.data.overall.max)}
-                accent="rose"
+        <div className="analytics-dashboard">
+          <section className="panel analytics-section">
+            <div className="analytics-stats-row">
+              <StatCard label="Total Active Employees" value={headcountQuery.data?.total ?? 0} />
+              <StatCard label="Average Salary" value={formatCurrency(overall.avg ?? 0)} />
+              <StatCard label="Median Salary" value={formatCurrency(overall.median ?? 0)} />
+              <StatCard
+                label="Salary Range"
+                value={`${formatCurrency(overall.min ?? 0)} – ${formatCurrency(overall.max ?? 0)}`}
               />
             </div>
-
-            <section className="panel analytics-panel">
-              <h2>Headcount by department</h2>
-              <div className="stack-list">
-                {headcountQuery.data.by_department.map((item) => (
-                  <div key={item.department} className="stack-row">
-                    <span>{item.department}</span>
-                    <strong>{item.count}</strong>
-                  </div>
-                ))}
-              </div>
-            </section>
-
-            <section className="panel analytics-panel">
-              <h2>Band distribution</h2>
-              <div className="stack-list">
-                {bandQuery.data.map((item) => (
-                  <div key={item.band} className="stack-row">
-                    <span>
-                      {item.band} · {item.count} employees
-                    </span>
-                    <strong>{formatMoney(item.avg_salary)}</strong>
-                  </div>
-                ))}
-              </div>
-            </section>
           </section>
 
-          <section className="analytics-stack">
-            <section className="panel analytics-panel">
-              <h2>Salary breakdown</h2>
-              <div className="stack-list">
-                <div className="stack-row">
-                  <span>Average</span>
-                  <strong>{formatMoney(salaryStatsQuery.data.overall.avg)}</strong>
-                </div>
-                <div className="stack-row">
-                  <span>Median</span>
-                  <strong>{formatMoney(salaryStatsQuery.data.overall.median)}</strong>
-                </div>
-                <div className="stack-row">
-                  <span>Minimum</span>
-                  <strong>{formatMoney(salaryStatsQuery.data.overall.min)}</strong>
-                </div>
-                <div className="stack-row">
-                  <span>Maximum</span>
-                  <strong>{formatMoney(salaryStatsQuery.data.overall.max)}</strong>
-                </div>
+          <section className="charts-row">
+            <article className="panel analytics-section chart-card">
+              <div className="section-title-block">
+                <h2>Average Salary by Department</h2>
               </div>
-            </section>
+              <div className="chart-area">
+                <ResponsiveContainer width="100%" height={320}>
+                  <BarChart data={salaryByDepartment}>
+                    <XAxis dataKey="department" tickLine={false} axisLine={false} />
+                    <YAxis tickLine={false} axisLine={false} tickFormatter={formatCurrency} />
+                    <Tooltip formatter={(value) => [formatCurrency(value), 'Average Salary']} />
+                    <Bar dataKey="avg" fill="#4f46e5" radius={[8, 8, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </article>
 
-            <section className="panel analytics-panel">
-              <h2>Top earners</h2>
-              <div className="top-earners-list">
-                {topEarnersQuery.data.map((employee, index) => (
-                  <div key={employee.id} className="top-earner-row">
-                    <span className="rank-pill">{index + 1}</span>
-                    <div>
-                      <strong>{employee.full_name}</strong>
-                      <p>
-                        {employee.department} · {employee.band}
-                      </p>
-                    </div>
-                    <span className="earnings">
-                      {formatMoney(employee.base_salary)} {employee.currency}
-                    </span>
-                  </div>
-                ))}
+            <article className="panel analytics-section chart-card">
+              <div className="section-title-block">
+                <h2>Headcount by Country</h2>
               </div>
-            </section>
+              <div className="chart-area">
+                <ResponsiveContainer width="100%" height={320}>
+                  <PieChart>
+                    <Pie
+                      data={headcountByCountry}
+                      dataKey="count"
+                      nameKey="country"
+                      innerRadius={72}
+                      outerRadius={118}
+                      paddingAngle={2}
+                    >
+                      {headcountByCountry.map((entry, index) => (
+                        <Cell key={entry.country} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </article>
+          </section>
+
+          <section className="panel analytics-section">
+            <div className="section-title-block">
+              <h2>Band Distribution</h2>
+            </div>
+            <div className="table-wrap analytics-table-wrap">
+              <table className="analytics-table">
+                <thead>
+                  <tr>
+                    <th>Band</th>
+                    <th>Employee Count</th>
+                    <th>Avg Salary</th>
+                    <th>Min Salary</th>
+                    <th>Max Salary</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {bandDistribution.map((item) => (
+                    <tr key={item.band}>
+                      <td>{item.band}</td>
+                      <td>{item.count}</td>
+                      <td>{Number(item.avg_salary).toLocaleString()}</td>
+                      <td>{Number(item.min_salary).toLocaleString()}</td>
+                      <td>{Number(item.max_salary).toLocaleString()}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <section className="panel analytics-section">
+            <div className="section-title-block">
+              <h2>Top 10 Earners</h2>
+            </div>
+            <div className="table-wrap analytics-table-wrap">
+              <table className="analytics-table">
+                <thead>
+                  <tr>
+                    <th>Rank</th>
+                    <th>Emp ID</th>
+                    <th>Full Name</th>
+                    <th>Department</th>
+                    <th>Band</th>
+                    <th>Salary</th>
+                    <th>Currency</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {topEarners.map((employee, index) => (
+                    <tr key={employee.id}>
+                      <td>{index + 1}</td>
+                      <td>{employee.emp_id}</td>
+                      <td>{employee.full_name}</td>
+                      <td>{employee.department}</td>
+                      <td>{employee.band}</td>
+                      <td>{formatSalary(employee.base_salary, employee.currency)}</td>
+                      <td>{employee.currency}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </section>
         </div>
       )}
