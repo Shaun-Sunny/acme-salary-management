@@ -52,6 +52,15 @@
   font-size: 1.5rem;
 }
 
+.modal-kicker {
+  margin: 0 0 4px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #4f46e5;
+}
+
 .modal-close {
   display: inline-flex;
   align-items: center;
@@ -120,6 +129,47 @@
   justify-content: flex-end;
   gap: 12px;
   margin-top: 20px;
+}
+
+.salary-history-modal {
+  width: min(1180px, 100%);
+}
+
+.salary-history-content {
+  padding: 22px 24px 24px;
+}
+
+.salary-history-table-wrap {
+  border-radius: 18px;
+}
+
+.salary-history-table {
+  min-width: 100%;
+}
+
+.salary-history-table tbody tr:hover {
+  background: rgba(79, 70, 229, 0.04);
+}
+
+.change-positive {
+  color: #15803d;
+  font-weight: 700;
+}
+
+.change-negative {
+  color: #dc2626;
+  font-weight: 700;
+}
+
+.change-neutral {
+  color: #6b7280;
+  font-weight: 700;
+}
+
+.empty-history-state {
+  padding: 28px 16px;
+  text-align: center;
+  color: #6b7280;
 }
 
 @media (max-width: 900px) {
@@ -348,6 +398,12 @@
   background: #fff2f2;
   color: #be123c;
   border-color: rgba(190, 18, 60, 0.12);
+}
+
+.icon-button.history {
+  background: #f5f3ff;
+  color: #4f46e5;
+  border-color: rgba(79, 70, 229, 0.12);
 }
 
 .primary-button:hover,

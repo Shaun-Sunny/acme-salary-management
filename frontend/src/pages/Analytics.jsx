@@ -31,7 +31,7 @@ function Spinner() {
 }
 
 function formatNumber(value) {
-  return Number(value).toLocaleString(undefined, {
+  return Number(value).toLocaleString('en-US', {
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   })
@@ -42,7 +42,7 @@ function formatCurrency(value) {
 }
 
 function formatSalary(value, currency) {
-  return `${Number(value).toLocaleString(undefined, {
+  return `${Number(value).toLocaleString('en-US', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   })} ${currency}`
@@ -192,9 +192,9 @@ export default function Analytics() {
                     <tr key={item.band}>
                       <td>{item.band}</td>
                       <td>{item.count}</td>
-                      <td>{Number(item.avg_salary).toLocaleString()}</td>
-                      <td>{Number(item.min_salary).toLocaleString()}</td>
-                      <td>{Number(item.max_salary).toLocaleString()}</td>
+                      <td>{Number(item.avg_salary).toLocaleString('en-US')}</td>
+                      <td>{Number(item.min_salary).toLocaleString('en-US')}</td>
+                      <td>{Number(item.max_salary).toLocaleString('en-US')}</td>
                     </tr>
                   ))}
                 </tbody>

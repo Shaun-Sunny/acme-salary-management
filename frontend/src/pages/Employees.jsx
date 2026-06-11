@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { LoaderCircle, Pencil, Search, X } from 'lucide-react'
+import { Clock, LoaderCircle, Pencil, Search, X } from 'lucide-react'
 import { deactivateEmployee, getEmployees } from '../api/employees.js'
 import EmployeeForm from '../components/EmployeeForm.jsx'
+import SalaryHistoryModal from '../components/SalaryHistoryModal.jsx'
 
 const PAGE_SIZE = 50
 
@@ -77,6 +78,8 @@ export default function Employees() {
   const [filters, setFilters] = useState(defaultFilters)
   const [isEmployeeFormOpen, setIsEmployeeFormOpen] = useState(false)
   const [selectedEmployee, setSelectedEmployee] = useState(null)
+  const [isSalaryHistoryOpen, setIsSalaryHistoryOpen] = useState(false)
+  const [selectedHistoryEmployee, setSelectedHistoryEmployee] = useState(null)
   const queryClient = useQueryClient()
 
   const normalizedFilters = useMemo(
@@ -136,6 +139,11 @@ export default function Employees() {
 
   function handleEmployeeFormSuccess() {
     queryClient.invalidateQueries(['employees'])
+  }
+
+  function openSalaryHistoryModal(employee) {
+    setSelectedHistoryEmployee(employee)
+    setIsSalaryHistoryOpen(true)
   }
 
   async function handleDeactivate(id) {
@@ -275,6 +283,14 @@ export default function Employees() {
                             >
                               <Pencil size={16} />
                             </button>
+                            <button
+                              type="button"
+                              className="icon-button history"
+                              onClick={() => openSalaryHistoryModal(employee)}
+                              aria-label={`View salary history for ${employee.full_name}`}
+                            >
+                              <Clock size={16} />
+                            </button>
                             {employee.status === 'active' ? (
                               <button
                                 type="button"
@@ -327,6 +343,12 @@ export default function Employees() {
         onClose={() => setIsEmployeeFormOpen(false)}
         onSuccess={handleEmployeeFormSuccess}
         employee={selectedEmployee}
+      />
+
+      <SalaryHistoryModal
+        isOpen={isSalaryHistoryOpen}
+        onClose={() => setIsSalaryHistoryOpen(false)}
+        employee={selectedHistoryEmployee}
       />
     </section>
   )
