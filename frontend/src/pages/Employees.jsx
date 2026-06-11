@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { LoaderCircle, Pencil, Search, X } from 'lucide-react'
 import { deactivateEmployee, getEmployees } from '../api/employees.js'
+import EmployeeForm from '../components/EmployeeForm.jsx'
 
 const PAGE_SIZE = 50
 
@@ -74,6 +75,8 @@ function Spinner() {
 export default function Employees() {
   const [page, setPage] = useState(1)
   const [filters, setFilters] = useState(defaultFilters)
+  const [isEmployeeFormOpen, setIsEmployeeFormOpen] = useState(false)
+  const [selectedEmployee, setSelectedEmployee] = useState(null)
   const queryClient = useQueryClient()
 
   const normalizedFilters = useMemo(
@@ -121,6 +124,20 @@ export default function Employees() {
     setFilters(defaultFilters)
   }
 
+  function openAddEmployeeModal() {
+    setSelectedEmployee(null)
+    setIsEmployeeFormOpen(true)
+  }
+
+  function openEditEmployeeModal(employee) {
+    setSelectedEmployee(employee)
+    setIsEmployeeFormOpen(true)
+  }
+
+  function handleEmployeeFormSuccess() {
+    queryClient.invalidateQueries(['employees'])
+  }
+
   async function handleDeactivate(id) {
     await deactivateMutation.mutateAsync(id)
   }
@@ -136,7 +153,7 @@ export default function Employees() {
           </p>
         </div>
 
-        <button type="button" className="primary-button" onClick={() => console.log('Add Employee clicked')}>
+        <button type="button" className="primary-button" onClick={openAddEmployeeModal}>
           Add Employee
         </button>
       </div>
@@ -253,7 +270,7 @@ export default function Employees() {
                             <button
                               type="button"
                               className="icon-button"
-                              onClick={() => console.log('Edit employee', employee.id)}
+                              onClick={() => openEditEmployeeModal(employee)}
                               aria-label={`Edit ${employee.full_name}`}
                             >
                               <Pencil size={16} />
@@ -304,6 +321,13 @@ export default function Employees() {
           </>
         )}
       </div>
+
+      <EmployeeForm
+        isOpen={isEmployeeFormOpen}
+        onClose={() => setIsEmployeeFormOpen(false)}
+        onSuccess={handleEmployeeFormSuccess}
+        employee={selectedEmployee}
+      />
     </section>
   )
 }
