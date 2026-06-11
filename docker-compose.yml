@@ -1,0 +1,20 @@
+version: "3.9"
+
+services:
+  backend:
+    build: ./backend
+    container_name: acme_backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend/salary.db:/app/salary.db
+    environment:
+      - DATABASE_URL=sqlite:///./salary.db
+
+  frontend:
+    build: ./frontend
+    container_name: acme_frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend

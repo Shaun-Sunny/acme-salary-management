@@ -1,0 +1,7 @@
+**/node_modules
+**/__pycache__
+**/*.pyc
+**/salary.db
+**/.env
+**/pytest_cache
+**/.git
